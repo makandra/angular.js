@@ -41,6 +41,8 @@ var $interpolateMinErr = minErr('$interpolate');
 function $InterpolateProvider() {
   var startSymbol = '{{';
   var endSymbol = '}}';
+  var escapedStartSymbol = '\\{\\{';
+  var escapedEndSymbol = '\\}\\}';
 
   /**
    * @ngdoc method
@@ -134,17 +136,26 @@ function $InterpolateProvider() {
           exp,
           concat = [];
 
+      function quoteForRegexp(pattern) {
+        return pattern.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&")
+      }
+      function unescapeSymbols(text) {
+        var startSymbolRegexp = new RegExp(quoteForRegexp(escapedStartSymbol), 'g');
+        var endSymbolRegexp = new RegExp(quoteForRegexp(escapedEndSymbol), 'g');
+        return text.replace(startSymbolRegexp, startSymbol).replace(endSymbolRegexp, endSymbol);
+      }
+
       while(index < length) {
         if ( ((startIndex = text.indexOf(startSymbol, index)) != -1) &&
              ((endIndex = text.indexOf(endSymbol, startIndex + startSymbolLength)) != -1) ) {
-          (index != startIndex) && parts.push(text.substring(index, startIndex));
+          (index != startIndex) && parts.push(unescapeSymbols(text.substring(index, startIndex)));
           parts.push(fn = $parse(exp = text.substring(startIndex + startSymbolLength, endIndex)));
           fn.exp = exp;
           index = endIndex + endSymbolLength;
           hasInterpolation = true;
         } else {
           // we did not find anything, so we have to add the remainder to the parts array
-          (index != length) && parts.push(text.substring(index));
+          (index != length) && parts.push(unescapeSymbols(text.substring(index)));
           index = length;
         }
       }

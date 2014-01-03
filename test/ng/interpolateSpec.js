@@ -66,6 +66,12 @@ describe('$interpolate', function() {
     expect($interpolate("Hello {{'World' + foo()}}")($rootScope)).toEqual('Hello World');
   }));
 
+  it('should unescape escaped interpolation brackets', inject(function($interpolate, $rootScope) {
+    expect($interpolate("Hello \\{\\{World\\}\\}!")($rootScope)).toEqual('Hello {{World}}!');
+    expect($interpolate("{{ 'Hello' }} \\{\\{World\\}\\}!")($rootScope)).toEqual('Hello {{World}}!');
+    expect($interpolate("Hello \\{\\{World\\}\\}{{ '!' }}")($rootScope)).toEqual('Hello {{World}}!');
+  }));
+
 
   describe('interpolating in a trusted context', function() {
     var sce;
